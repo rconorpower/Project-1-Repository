@@ -52,8 +52,8 @@ A summary of the access policies in place can be found in the table below.
 | Name      | Publicly Accessible | Allowed IP Addresses |
 |---------- |:-------------------:|:--------------------:|
 | Jump Box  | Yes                 | Personal IP Address  |
-| Web-1     | No                  |                      |
-| Web-2     | No                  |                      |
+| Web-1     | No                  | 10.0.0.4             |
+| Web-2     | No                  | 10.0.0.4             |
 | ELK-Master| No                  | 20.65.8.186          |
 
 ### Elk Configuration
