@@ -101,14 +101,58 @@ A summary of the access policies in place can be found in the table below.
 
 Ansible was used to automate configuration of the ELK machine. No configuration was performed manually, which is advantageous because it ensures that the provisioning scripts run identically everywhere, eliminating variability between configurations.
 
-The playbook implements the following tasks:
+The [install-elk.yml](Ansible/install-elk.yml) playbook implements the following tasks:
 - Installs docker.io on the elk machine
 - Installs Python software (pip3)
 - Installs docker python pip module
 - Increases the virtual memory of the Elk machine
 - Downloads and launches the docker Elk container while exposing ports 5601, 9200, and 5044
 - Enables the docker service on boot
+````YAML
+---
+- name: Configure ELK VM with Docker
+  hosts: elk
+  remote_user: azadmin
+  become: true
+  tasks:
 
+  - name: Install docker.io
+    apt:
+      update_cache: yes
+      force_apt_get: yes
+      name: docker.io
+      state: present
+
+  - name: Install python3-pip
+    apt:
+      force_apt_get: yes
+      name: python3-pip
+      state: present
+
+  - name: Install Docker Module
+    pip:
+      name: docker
+      state: present
+
+  - name: Increase virtual memory
+    command: sysctl -w vm.max_map_count=262144
+
+  - name: download and launch a docker elk container
+    docker_container:
+      name: elk
+      image: sebp/elk:761
+      state: started
+      restart_policy: always
+      published_ports:
+        - 5601:5601
+        - 9200:9200
+        - 5044:5044
+
+  - name: Enable service docker on boot
+    systemd:
+      name: docker
+      enabled: yes
+````
 The following screenshot displays the result of running `docker ps` after successfully configuring the ELK instance.
 
 ![](https://github.com/rconorpower/Project-1-Repository/blob/main/Images/docker_ps_output.png)
@@ -123,23 +167,32 @@ We have installed the following Beats on these machines:
 - Metricbeat
 
 These Beats allow us to collect the following information from each machine:
-- Filebeat collects data about the file systemmy monitoring logs.
-- Metricbeat collects machine metrics from the system and services running on the server.
+- `Filebeat` collects data about the file systemmy monitoring logs.
+- `Metricbeat` collects machine metrics from the system and services running on the server.
 
 ### Using the Playbook
 In order to use the playbook, you will need to have an Ansible control node already configured. Assuming you have such a control node provisioned: 
 
 SSH into the control node and follow the steps below:
-- Copy the [install-elk.yml](Ansible/install-elk.yml) file to /etc/ansible/.
-- Update the `hosts` file to include the Elk group and Elk machine ID
+- Copy the [install-elk.yml](Ansible/install-elk.yml) file to /etc/ansible/
+- Update the `hosts` file to include the Elk group (below [webservers]) and Elk machine ID
 ```
 [elk]
 10.1.0.4 ansible_python_interpreter=/usr/bin/python3
 ```
 - Run the playbook, and navigate to Kibana [http://20.65.8.186:5601/app/kibana] to check that the installation worked as expected.
 
-_As a **Bonus**, provide the specific commands the user will need to run to download the playbook, update the files, etc._
-- Download the playbook
-  - 
-- Update files
-  - 
+### Instructions for users looking to run, download the playbook, update the files, etc.
+- Download the playbook to the ELK VM using the following command:
+  - `curl -L -o /etc/ansible/install-elk.yml https://github.com/rconorpower/Project-1-Repository/blob/d05c50c1141af7f13624abf5d5a90cf850f3441c/Ansible/install-elk.yml`
+- Update 'hosts' file:
+  - `nano /etc/ansible/hosts`
+    - Add Elk group and Elk machine ID to `hosts` file below the [webservers] group
+      - ```
+        [elk]
+        Elk_VM_Private.IP ansible_python_interpreter=/usr/bin/python3
+        ```
+- Run the playbook using the following command:
+  - `ansible-playbook /etc/ansible/install-elk.yml`
+- Make sure Elk server is running by accessing the followig link in your browser:
+  - `http://[ELK-VM-Public.IP]:5601/app/kibana`
